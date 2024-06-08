@@ -1,12 +1,13 @@
 // TestcaseForm.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const AddTestcase = () => {
   const { problemId } = useParams();
   const [testcases, setTestcases] = useState([{ input: '', output: '' }]);
   const [isUpdating, setIsUpdating] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTestcases = async () => {
@@ -49,6 +50,7 @@ const AddTestcase = () => {
       } else {
         await axios.post('http://localhost:5001/testcases', { problemId, inputs, outputs });
       }
+      navigate('/adminDashboard');
     } catch (error) {
       console.error('Error saving test cases', error);
     }

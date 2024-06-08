@@ -31,14 +31,17 @@ const ProblemPage = () => {
   const [activeTab, setActiveTab] = useState("problem");
   const [language, setLanguage] = useState("cpp");
   const [activeEditorTab, setActiveEditorTab] = useState("input");
-  const [bgColor, setBgColor] = useState('white');
-  const [color, setColor] = useState('black')
+  const [bgColor, setBgColor] = useState("white");
+  const [color, setColor] = useState("black");
   //const editorRef = useRef(null);
   const [code, setCode] = useState("");
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
-  //const [inputText, setInputText] = useState("");
-  //const [outputText, setOutputText] = useState("");
+
+  const [verdict, setVerdict] = useState("");
+  const [details, setDetails] = useState([]);
+  const [verdictBgColor, setVerdictBgColor] = useState("white");
+  const [verdictColor, setVerdictColor] = useState("black");
 
   useEffect(() => {
     axios
@@ -69,45 +72,93 @@ const ProblemPage = () => {
   };*/
   }
 
-  const handleSubmit = async () => {
+  const handleRun = async () => {
     const payload = {
       language,
       code,
       input,
     };
-  
+
     try {
       const { data } = await axios.post("http://localhost:8000/run", payload);
       console.log(data);
       setOutput(data.output);
-      setBgColor('white');
-      setColor('black');
+      setBgColor("white");
+      setColor("black");
     } catch (error) {
       // Differentiate between network errors and backend errors
       if (!error.response) {
-        console.error('Network or other error:', error.message);
+        console.error("Network or other error:", error.message);
         setOutput(`Error: Network error or other issue.`);
         return; // Exit early for network or other errors
       }
-  
+
       // Handle backend errors (including compilation and runtime errors)
       const { error: backendError, stderr } = error.response.data;
       console.error(`Backend error type: ${backendError}`);
       console.error(`Error details:\n${stderr}`);
-      if(stderr=='') {
+      if (stderr == "") {
         setOutput(`Error:\nsegmentation fault`);
+      } else {
+        setOutput(`Error:\n${stderr}`);
       }
-      else setOutput(`Error:\n${stderr}`);
-      setBgColor('#ffe6e6'); 
-      setColor('#ff0000');   
-      {/*\n${backendError}*/}
+      setBgColor("#ffe6e6");
+      setColor("#ff0000");
+      {
+        /*\n${backendError}*/
+      }
     }
   };
-  
 
   const handleRunClick = async () => {
-    const wait = await handleSubmit();
+    const wait = await handleRun();
     setActiveEditorTab("output");
+  };
+
+  const handleSubmit = async () => {
+    const payload = {
+      language,
+      code,
+      id,
+    };
+
+    try {
+      const { data } = await axios.post(
+        "http://localhost:8000/submit",
+        payload
+      );
+      if (data.verdict === "Accepted") {
+        setVerdict("Accepted");
+        setVerdictBgColor("#00cc00");
+        setVerdictColor("#00cc00");
+        setColor("white");
+        setDetails(
+          Array.from({ length: data.testcases }, (_, i) => `Test case ${i + 1}`)
+        );
+      } else if (data.verdict === "Wrong Answer") {
+        setVerdict("Wrong Answer");
+        setVerdictBgColor("#ff0000");
+        setVerdictColor("#ff0000");
+        setColor("white");
+        setDetails([`Test case ${data.testcase}`]);
+      } else {
+        setVerdict("Error");
+        setVerdictBgColor("#ffe6e6");
+        setVerdictColor("#ff0000");
+        setDetails([data.stderr]);
+      }
+    } catch (error) {
+      setVerdict("Error");
+      setVerdictBgColor("#ffe6e6");
+      setVerdictColor("#ff0000");
+      setColor('#ff0000');
+      setDetails([error.response.data.stderr || "Unknown error"]);
+    }
+  };
+
+  const handleSubmitClick = async () => {
+    const submitWait = await handleSubmit();
+    setActiveEditorTab("verdict");
   };
 
   return (
@@ -170,9 +221,6 @@ const ProblemPage = () => {
                   >
                     {problem.difficulty}
                   </span>
-                  {/*<span className="bg-gray-200 text-gray-800 px-3 py-1 rounded-full">
-                    {problem.category}
-                    </span>*/}
                 </div>
                 <div
                   style={{
@@ -231,7 +279,7 @@ const ProblemPage = () => {
             options={{
               selectOnLineNumbers: true,
               automaticLayout: true,
-              minimap: { enabled: false }
+              minimap: { enabled: false },
             }}
           />
           <div className="mt-4">
@@ -260,6 +308,20 @@ const ProblemPage = () => {
                   Output
                 </button>
               </li>
+              <li className="mr-2">
+                {" "}
+                {/* Added new Verdict tab */}
+                <button
+                  className={`inline-block py-2 px-4 ${
+                    activeEditorTab === "verdict"
+                      ? "border-l border-t border-r rounded-t"
+                      : "text-black-500 hover:text-black-800"
+                  }`}
+                  onClick={() => setActiveEditorTab("verdict")}
+                >
+                  Verdict
+                </button>
+              </li>
             </ul>
             <div>
               {activeEditorTab === "input" && (
@@ -273,25 +335,63 @@ const ProblemPage = () => {
               )}
               {activeEditorTab === "output" && (
                 <div
-                className="w-full border p-2 rounded mb-4 min-h-[4rem]"
-                style={{ backgroundColor: bgColor , color: color , height: "100px", overflowY: "auto", maxHeight: "100px" }}
-              >
-                {output.split("\n").map((line, index) => (
-                  <div key={index}>{line}</div>
-                ))}
-              </div>
-              
+                  className="w-full border p-2 rounded mb-4 min-h-[4rem]"
+                  style={{
+                    backgroundColor: bgColor,
+                    color: color,
+                    height: "100px",
+                    overflowY: "auto",
+                    maxHeight: "100px",
+                  }}
+                >
+                  {output.split("\n").map((line, index) => (
+                    <div key={index}>{line}</div>
+                  ))}
+                </div>
+              )}
+              {activeEditorTab === "verdict" && ( // Added Verdict section
+                <div
+                  className="w-full border p-2 rounded mb-4 min-h-[4rem]"
+                  style={{
+                    backgroundColor: bgColor,
+                    color: color,
+                    height: "100px",
+                    overflowY: "auto",
+                    maxHeight: "100px",
+                  }}
+                >
+                  <h1 style={{ fontWeight: 'bold' , fontSize: '20px' , color: verdictColor , marginBottom: '20px' }}>{verdict}</h1>
+                  <ul>
+                    {details.map((detail, index) => (
+                      <li
+                        key={index}
+                        style={{
+                          backgroundColor: verdictBgColor,
+                          color: {color},
+                          borderRadius: "8px",
+                          padding: "5px",
+                          marginRight: "10px",
+                          marginBottom: "10px",
+                          display: 'inline-block',
+                          wordWrap: 'break-word'
+                        }}
+                      >
+                        {detail}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
               <div className="flex space-x-2">
                 <button
-                  className="flex-1 bg-green-500 text-white p-2 rounded"
+                  className="flex-1 bg-green-500 hover:bg-green-400 text-white p-2 rounded"
                   onClick={handleRunClick}
                 >
                   Run
                 </button>
                 <button
-                  className="flex-1 bg-black text-white p-2 rounded"
-                  onClick={() => alert("Submitting code...")}
+                  className="flex-1 bg-black hover:bg-gray-800 text-white p-2 rounded"
+                  onClick={handleSubmitClick}
                 >
                   Submit
                 </button>
