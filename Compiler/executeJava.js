@@ -1,31 +1,52 @@
-const { exec } = require("child_process");
+const { exec, spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-const executeJava = (filepath,inputPath) => {
+const executeJava = (filepath, inputPath) => {
+  const timeLimit = 2000; // 2 seconds in milliseconds
+
   return new Promise((resolve, reject) => {
-    exec(
-      `java ${filepath} < ${inputPath}`,
-      (error, stdout, stderr) => {
-        if (error) {
-            // Likely compilation error
-            const compilationError = {
-              type: 'compilation',
-              stderr: stderr
-            };
-            reject(compilationError);
-          } else if (stderr.includes('segmentation fault')) {
-            // Example: Detect runtime error (replace with your logic)
-            const runtimeError = {
-              type: 'runtime',
-              stderr: stderr
-            };
-            reject(runtimeError);
-          } else {
-            resolve(stdout);
-          }
+    const run = spawn('java', [filepath], { stdio: ['pipe', 'pipe', 'pipe'] });
+
+    const timer = setTimeout(() => {
+      run.kill();
+      const tleError = {
+        type: 'tle',
+        stderr: 'Time Limit Exceeded'
+      };
+      reject(tleError);
+    }, timeLimit);
+
+    run.stdin.write(fs.readFileSync(inputPath));
+    run.stdin.end();
+
+    let output = '';
+    run.stdout.on('data', (data) => {
+      output += data.toString();
+    });
+
+    run.stderr.on('data', (data) => {
+      run.kill();
+      clearTimeout(timer);
+      const runtimeError = {
+        type: 'runtime',
+        stderr: data.toString()
+      };
+      reject(runtimeError);
+    });
+
+    run.on('close', (code) => {
+      clearTimeout(timer);
+      if (code === 0) {
+        resolve(output);
+      } else {
+        const runtimeError = {
+          type: 'runtime',
+          stderr: 'Runtime Error'
+        };
+        reject(runtimeError);
       }
-    );
+    });
   });
 };
 

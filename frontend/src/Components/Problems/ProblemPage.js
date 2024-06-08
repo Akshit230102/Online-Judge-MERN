@@ -4,6 +4,7 @@ import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import Navbar from "../Navbar/Navbar";
 import MonacoEditor from "@monaco-editor/react";
+import LoadingSpinner from "./LoadingSpinner";
 import { VscRunAll } from "react-icons/vsc";
 
 const getDifficultyClass = (difficulty) => {
@@ -42,6 +43,7 @@ const ProblemPage = () => {
   const [details, setDetails] = useState([]);
   const [verdictBgColor, setVerdictBgColor] = useState("white");
   const [verdictColor, setVerdictColor] = useState("black");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     axios
@@ -78,35 +80,37 @@ const ProblemPage = () => {
       code,
       input,
     };
-
+  
     try {
       const { data } = await axios.post("http://localhost:8000/run", payload);
-      console.log(data);
-      setOutput(data.output);
-      setBgColor("white");
-      setColor("black");
+      if (data.error === "Time Limit Exceeded") {
+        setVerdict("");
+        setOutput("Time Limit Exceeded");
+        setColor("#ff0000");
+      } else {
+        setOutput(data.output);
+        setVerdict("");
+        setBgColor("white");
+        setColor("black");
+      }
     } catch (error) {
-      // Differentiate between network errors and backend errors
       if (!error.response) {
         console.error("Network or other error:", error.message);
         setOutput(`Error: Network error or other issue.`);
-        return; // Exit early for network or other errors
+        return;
       }
-
-      // Handle backend errors (including compilation and runtime errors)
       const { error: backendError, stderr } = error.response.data;
       console.error(`Backend error type: ${backendError}`);
       console.error(`Error details:\n${stderr}`);
       if (stderr == "") {
         setOutput(`Error:\nsegmentation fault`);
+        setVerdict("");
       } else {
         setOutput(`Error:\n${stderr}`);
+        setVerdict("");
       }
       setBgColor("#ffe6e6");
       setColor("#ff0000");
-      {
-        /*\n${backendError}*/
-      }
     }
   };
 
@@ -121,14 +125,12 @@ const ProblemPage = () => {
       code,
       id,
     };
-
+  
     try {
-      const { data } = await axios.post(
-        "http://localhost:8000/submit",
-        payload
-      );
+      const { data } = await axios.post("http://localhost:8000/submit", payload);
       if (data.verdict === "Accepted") {
         setVerdict("Accepted");
+        setOutput("");
         setVerdictBgColor("#00cc00");
         setVerdictColor("#00cc00");
         setColor("white");
@@ -137,28 +139,43 @@ const ProblemPage = () => {
         );
       } else if (data.verdict === "Wrong Answer") {
         setVerdict("Wrong Answer");
+        setOutput("");
+        setVerdictBgColor("#ff0000");
+        setVerdictColor("#ff0000");
+        setColor("white");
+        setDetails([`Test case ${data.testcase}`]);
+      } else if (data.verdict === "Time Limit Exceeded") {
+        setVerdict("Time Limit Exceeded");
+        setOutput("");
         setVerdictBgColor("#ff0000");
         setVerdictColor("#ff0000");
         setColor("white");
         setDetails([`Test case ${data.testcase}`]);
       } else {
         setVerdict("Error");
+        setOutput("");
         setVerdictBgColor("#ffe6e6");
         setVerdictColor("#ff0000");
         setDetails([data.stderr]);
       }
     } catch (error) {
       setVerdict("Error");
+      setOutput("");
       setVerdictBgColor("#ffe6e6");
       setVerdictColor("#ff0000");
       setColor('#ff0000');
       setDetails([error.response.data.stderr || "Unknown error"]);
     }
+    finally {
+      setIsLoading(false); // Set loading to false after verdict is generated
+    }
   };
+  
 
   const handleSubmitClick = async () => {
-    const submitWait = await handleSubmit();
     setActiveEditorTab("verdict");
+    setIsLoading(true);
+    const submitWait = await handleSubmit();
   };
 
   return (
@@ -349,39 +366,54 @@ const ProblemPage = () => {
                   ))}
                 </div>
               )}
-              {activeEditorTab === "verdict" && ( // Added Verdict section
-                <div
-                  className="w-full border p-2 rounded mb-4 min-h-[4rem]"
-                  style={{
-                    backgroundColor: bgColor,
-                    color: color,
-                    height: "100px",
-                    overflowY: "auto",
-                    maxHeight: "100px",
-                  }}
-                >
-                  <h1 style={{ fontWeight: 'bold' , fontSize: '20px' , color: verdictColor , marginBottom: '20px' }}>{verdict}</h1>
-                  <ul>
-                    {details.map((detail, index) => (
-                      <li
-                        key={index}
-                        style={{
-                          backgroundColor: verdictBgColor,
-                          color: {color},
-                          borderRadius: "8px",
-                          padding: "5px",
-                          marginRight: "10px",
-                          marginBottom: "10px",
-                          display: 'inline-block',
-                          wordWrap: 'break-word'
-                        }}
-                      >
-                        {detail}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              {activeEditorTab === "verdict" && (
+        <div
+          className="w-full border p-2 rounded mb-4 min-h-[4rem]"
+          style={{
+            backgroundColor: bgColor,
+            color: color,
+            height: "100px",
+            overflowY: "auto",
+            maxHeight: "100px",
+          }}
+        >
+          {isLoading ? (
+            <LoadingSpinner /> // Show spinner while loading
+          ) : (
+            <>
+              <h1
+                style={{
+                  fontWeight: "bold",
+                  fontSize: "20px",
+                  color: verdictColor,
+                  marginBottom: "20px",
+                }}
+              >
+                {verdict}
+              </h1>
+              <ul>
+                {details.map((detail, index) => (
+                  <li
+                    key={index}
+                    style={{
+                      backgroundColor: verdictBgColor,
+                      color: color,
+                      borderRadius: "8px",
+                      padding: "5px",
+                      marginRight: "10px",
+                      marginBottom: "10px",
+                      display: "inline-block",
+                      wordWrap: "break-word",
+                    }}
+                  >
+                    {detail}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      )}
               <div className="flex space-x-2">
                 <button
                   className="flex-1 bg-green-500 hover:bg-green-400 text-white p-2 rounded"

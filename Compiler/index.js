@@ -18,42 +18,39 @@ app.get("/", (req, res) => {
 });
 
 app.post("/run", async (req, res) => {
-    // const language = req.body.language;
-    // const code = req.body.code;
-
-    var { language = 'cpp', code, input } = req.body;
+    const { language = 'cpp', code, input } = req.body;
     if (code === undefined) {
-        return res.status(404).json({ success: false, error: "Empty code!" });
+      return res.status(404).json({ success: false, error: "Empty code!" });
     }
     try {
-        var output;
-        const filePath = await generateFile(language, code);
-        const inputPath = await generateInputFile(input);
-        if(language=='cpp'){
-            output = await executeCpp(filePath, inputPath);
-        }
-        else if(language=='python'){
-            output = await executePy(filePath, inputPath);
-        }
-        else {
-            output = await executeJava(filePath, inputPath);
-        }
-        res.json({ filePath, inputPath, output });
-    } catch (error) {
-        console.error('Backend error:', error); // Log the complete error for debugging
-        res.status(500).json({ error: error.error || 'segmentation fault' ,stderr: error.stderr });
+      const filePath = await generateFile(language, code);
+      const inputPath = await generateInputFile(input);
+      let output;
+      if (language === 'cpp') {
+        output = await executeCpp(filePath, inputPath);
+      } else if (language === 'python') {
+        output = await executePy(filePath, inputPath);
+      } else {
+        output = await executeJava(filePath, inputPath);
       }
-});
+      res.json({ filePath, inputPath, output });
+    } catch (error) {
+      console.error('Backend error:', error);
+      if (error.type === 'tle') {
+        return res.status(200).json({ error: 'Time Limit Exceeded' });
+      }
+      res.status(500).json({ error: error.type === 'compilation' ? 'Compilation Error' : 'Runtime Error', stderr: error.stderr });
+    }
+  });
 
 
-app.post('/submit', async (req, res) => {
+  app.post('/submit', async (req, res) => {
     const { language, code, id } = req.body;
     if (!code) {
       return res.status(400).json({ error: 'No code provided' });
     }
   
     try {
-      // Fetch test cases from the backend server
       const testcasesResponse = await axios.get(`http://192.168.29.173:5001/testcases/${id}`);
       const testcases = testcasesResponse.data;
   
@@ -78,6 +75,9 @@ app.post('/submit', async (req, res) => {
             output = await executeJava(filePath, inputPath);
           }
         } catch (error) {
+          if (error.type === 'tle') {
+            return res.status(200).json({ verdict: 'Time Limit Exceeded', testcase: i + 1 });
+          }
           return res.status(400).json({
             error: error.type === 'compilation' ? 'Compilation Error' : 'Runtime Error',
             stderr: error.stderr,
@@ -92,11 +92,11 @@ app.post('/submit', async (req, res) => {
   
       res.status(200).json({ verdict: 'Accepted', testcases: testcases.inputs.length });
     } catch (error) {
-      //console.error('Error in /submit route:', error);
       console.log('message:', error)
       res.status(500).json({ error: 'Internal Server Error' });
     }
-});
+  });
+  
   
 
 
