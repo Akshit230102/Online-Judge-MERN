@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config({path: "../.env"});
 const cors = require('cors');
+var cookieParser = require('cookie-parser')
 
 // Load environment variables
 //dotenv.config();
@@ -10,6 +11,7 @@ const cors = require('cors');
 const app = express();
 
 // Middleware
+app.use(cookieParser());
 app.use(cors({origin: 'http://localhost:3000',
 credentials: true}));
 app.use(express.json());

@@ -1,33 +1,53 @@
-import { Route, Routes } from "react-router-dom";
-import AdminDashboard from "./Components/Admin/AdminDashboard.js";
-import CreateProblem from "./Components/Admin/CreateProblem.js";
-import DeleteProblem from "./Components/Admin/DeleteProblem.js";
-import UpdateProblem from "./Components/Admin/UpdateProblem.js";
-import UserDashboard from "./Components/User/UserDashboard.js";
-import Login from './Components/Login/Login.js';
-import Signup from './Components/Signup/Signup.js';
-import Home from './Components/Home/Home.js';
-import ProblemPage from "./Components/Problems/ProblemPage.js";
-import AddTestcase from "./Components/Testcase/AddTestcase.js";
+// App.js
+import { useEffect } from 'react';
+import { Route, Routes, Navigate, useNavigate } from "react-router-dom";
+import Home from './Components/Home/Home';
+import Signup from './Components/Signup/Signup';
+import Login from './Components/Login/Login';
+import UserDashboard from './Components/User/UserDashboard';
+import AdminDashboard from './Components/Admin/AdminDashboard';
+import CreateProblem from './Components/Admin/CreateProblem';
+import UpdateProblem from './Components/Admin/UpdateProblem';
+import DeleteProblem from './Components/Admin/DeleteProblem';
+import ProblemPage from './Components/Problems/ProblemPage';
+import AddTestcase from './Components/Testcase/AddTestcase';
+import Error from './Components/Error/Error';
+import { getUserRoleFromToken } from './Utils/helpers';
 
+const ProtectedRoute = ({ element: Element, adminOnly, ...rest }) => {
+  const navigate = useNavigate();
 
-function App() {
+  useEffect(() => {
+    const token = document.cookie.split('; ').find(row => row.startsWith('token='));
+    if (!token) {
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  const role = getUserRoleFromToken();
+  if (adminOnly && role !== 'admin') {
+    return <Navigate to="/error" />;
+  }
+
+  return <Element {...rest} />;
+};
+
+const App = () => {
   return (
-    <>
-    <Routes>
-      <Route path = '/' element = {<Home />}/>
-      <Route path='/signup' element= {<Signup />}/>
-      <Route path='/login' element= {<Login />}/>
-      <Route path='/dashboard' element={<UserDashboard />}/>
-      <Route path = '/adminDashboard' element = {<AdminDashboard/>}/>
-      <Route path = '/adminDashboard/create' element = {<CreateProblem />} />
-      <Route path = '/adminDashboard/update/:id' element = {<UpdateProblem />} />
-      <Route path = '/adminDashboard/delete/:id' element = {<DeleteProblem />} />
-      <Route path = '/problems/:id' element = {<ProblemPage />} />
-      <Route path = '/adminDashboard/addTestcase/:problemId' element = {<AddTestcase />} />
+      <Routes>
+        <Route path='/' element={<Home />} />
+        <Route path='/signup' element={<Signup />} />
+        <Route path='/login' element={<Login />} />
+        <Route path='error' element={<Error />}/>
+        <Route path='/dashboard' element={<ProtectedRoute element={UserDashboard} />} />
+        <Route path='/adminDashboard' element={<ProtectedRoute element={AdminDashboard} adminOnly />} />
+        <Route path='/adminDashboard/create' element={<ProtectedRoute element={CreateProblem} adminOnly />} />
+        <Route path='/adminDashboard/update/:id' element={<ProtectedRoute element={UpdateProblem} adminOnly />} />
+        <Route path='/adminDashboard/delete/:id' element={<ProtectedRoute element={DeleteProblem} adminOnly />} />
+        <Route path='/problems/:id' element={<ProtectedRoute element={ProblemPage} />} />
+        <Route path='/adminDashboard/addTestcase/:problemId' element={<ProtectedRoute element={AddTestcase} adminOnly />} />
       </Routes>
-    </>
   );
-}
+};
 
 export default App;

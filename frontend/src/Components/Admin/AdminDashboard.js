@@ -50,13 +50,13 @@ const AdminDashboard = () => {
 
   return (
     <div className="bg-gray-200 min-h-screen">
-      <Navbar />
-      <div className="flex">
+      <Navbar fixed={true} />
+      <div className="flex pt-14">
         <Sidebar
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
         />
-        <div className="flex-1 ml-64 p-4">
+        <div className="flex-1 ml-64 p-4 overflow-y-auto">
           <div className="flex justify-between mb-4">
             <div className="flex space-x-4">
               <Link

@@ -180,7 +180,7 @@ const ProblemPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col overflow-y-hidden">
-      <Navbar />
+      <Navbar fixed={false}/>
       <div className="flex flex-1 m-2 space-x-4">
         <div className="flex-1 bg-white p-4 rounded-lg shadow-lg overflow-y-auto max-h-screen">
           <div className="text-lg font-medium text-center text-gray-500 border-b border-gray-200 dark:text-gray-400 dark:border-gray-700 mb-4">

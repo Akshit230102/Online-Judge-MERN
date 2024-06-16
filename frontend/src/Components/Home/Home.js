@@ -6,8 +6,8 @@ const Home = () => {
   return (
     <div>
       <MainNavbar />
-      <div style={{ backgroundColor: '#E5E4E2' , display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <img src={home} alt="Centered Image" style={{ maxWidth: '100%', maxHeight: '100%' }} />
+      <div style={{ backgroundColor: '#eaeae8' , display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <img src={home} alt="Centered Image" style={{ maxWidth: '100%', maxHeight: '100%' , border: 'none', margin: '0', padding: '0'}} />
     </div>
     </div>
   )

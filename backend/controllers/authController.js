@@ -76,7 +76,10 @@ exports.registration = async(req, res)=>{
 
         const options = {
             expires : new Date(Date.now() + 1*24*60*60*1000), 
-            httpOnly : true
+            httpOnly : false,
+            secure: false,
+            sameSite: 'Strict',
+            path: '/',
         };
 
         return res.status(200).cookie("token", token, options).json({
@@ -88,3 +91,12 @@ exports.registration = async(req, res)=>{
         console.log(err);
     }
   };
+
+exports.logout = async (req, res) => {
+    try {
+        res.clearCookie("access_token");
+        res.status(200).json({ message: "You have successfully logged out!" });
+    } catch (error) {
+        res.status(500).json({ message: "Server Error!" });
+    }
+}
