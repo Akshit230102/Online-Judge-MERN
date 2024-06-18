@@ -7,6 +7,7 @@ const { executePy } = require('./exexutePy');
 const { executeJava } = require('./executeJava');
 const cors = require('cors');
 const axios = require('axios');
+require('dotenv').config();
 
 //middlewares
 app.use(cors());
@@ -51,7 +52,7 @@ app.post("/run", async (req, res) => {
     }
   
     try {
-      const testcasesResponse = await axios.get(`http://192.168.29.173:5001/testcases/${id}`);
+      const testcasesResponse = await axios.get(`${process.env.HOST_IP}/testcases/${id}`);
       const testcases = testcasesResponse.data;
   
       if (!testcases) {

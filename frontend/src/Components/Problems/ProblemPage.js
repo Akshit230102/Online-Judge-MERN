@@ -128,6 +128,7 @@ const ProblemPage = () => {
   
     try {
       const { data } = await axios.post("http://localhost:8000/submit", payload);
+      setBgColor('white');
       if (data.verdict === "Accepted") {
         setVerdict("Accepted");
         setOutput("");
@@ -211,19 +212,7 @@ const ProblemPage = () => {
                   My Submissions
                 </a>
               </li>
-              <li className="me-2">
-                <a
-                  href="#"
-                  className={`inline-block p-4 border-b-2 border-transparent rounded-t-lg ${
-                    activeTab === "leaderboard"
-                      ? "text-blue-600 border-blue-600 active dark:text-blue-500 dark:border-blue-500"
-                      : "hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
-                  }`}
-                  onClick={() => setActiveTab("leaderboard")}
-                >
-                  Leaderboard
-                </a>
-              </li>
+              
             </ul>
           </div>
           <div className="mb-8">
@@ -258,12 +247,6 @@ const ProblemPage = () => {
               <div>
                 <h2 className="text-xl font-bold mb-2">My Submissions</h2>
                 {/* Add your submissions component here */}
-              </div>
-            )}
-            {activeTab === "leaderboard" && (
-              <div>
-                <h2 className="text-xl font-bold mb-2">Leaderboard</h2>
-                {/* Add your leaderboard component here */}
               </div>
             )}
           </div>

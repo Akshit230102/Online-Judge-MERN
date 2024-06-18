@@ -34,9 +34,37 @@ const executeCpp = (filepath, inputPath) => {
         reject(tleError);
       }, timeLimit);
 
-      const inputFileData = fs.existsSync(inputPath) ? fs.readFileSync(inputPath) : '';
-      run.stdin.write(inputFileData);
-      run.stdin.end();
+      let inputFileData = '';
+      if (fs.existsSync(inputPath)) {
+        inputFileData = fs.readFileSync(inputPath, 'utf-8');
+      }
+      
+      // Check if inputFileData is empty or invalid
+      if (!inputFileData || typeof inputFileData !== 'string' || inputFileData.trim() === '') {
+        clearTimeout(timer);
+        run.kill();
+        const emptyInputError = {
+          type: 'empty-input',
+          stderr: 'Input is empty or invalid'
+        };
+        reject(emptyInputError);
+        return;
+      }
+
+      run.stdin.on('error', (err) => {
+        clearTimeout(timer);
+        const stdinError = {
+          type: 'stdin-error',
+          stderr: `Error writing to stdin: ${err.message}`
+        };
+        reject(stdinError);
+      });
+
+      // Check if process is still running before writing
+      if (!run.killed) {
+        run.stdin.write(inputFileData);
+        run.stdin.end();
+      }
 
       let output = '';
       run.stdout.on('data', (data) => {
