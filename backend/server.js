@@ -34,11 +34,13 @@ db.once('open', () => {
 const problemRouter = require('./routes/problemRoutes');
 const authRouter = require('./routes/authRoutes');
 const testCaseRouter = require('./routes/testcaseRoutes');
+const submissionRouter = require('./routes/submissionRoutes');
 
 //app.use('/api/example', exampleRouter);
 app.use('/',authRouter);
 app.use('/',problemRouter);
 app.use('/',testCaseRouter);
+app.use('/',submissionRouter);
 // app.use('/api', require('./routes/solutionRoutes'));
 // app.use('/api', require('./routes/problemRoutes'));
 // app.use('/api', require('./routes/testCaseRoutes'));

@@ -6,6 +6,9 @@ import Navbar from "../Navbar/Navbar";
 import MonacoEditor from "@monaco-editor/react";
 import LoadingSpinner from "./LoadingSpinner";
 import { VscRunAll } from "react-icons/vsc";
+import { FaCode } from "react-icons/fa6";
+import { getToken } from "../../Utils/helpers";
+import { jwtDecode } from "jwt-decode";
 
 const getDifficultyClass = (difficulty) => {
   switch (difficulty) {
@@ -45,6 +48,14 @@ const ProblemPage = () => {
   const [verdictColor, setVerdictColor] = useState("black");
   const [isLoading, setIsLoading] = useState(false);
 
+  const [submissions, setSubmissions] = useState([]);
+  const [selectedCode, setSelectedCode] = useState("");
+  const [showModal, setShowModal] = useState(false);
+
+  const token = getToken(); // Assuming you have a function to get the token
+  const decodedToken = jwtDecode(token);
+  const userId = decodedToken.id;
+
   useEffect(() => {
     axios
       .get(`http://localhost:5001/details/${id}`)
@@ -56,9 +67,9 @@ const ProblemPage = () => {
       });
   }, [id]);
 
-  if (!problem) {
-    return <div>Loading...</div>;
-  }
+  // if (!problem) {
+  //   return <div>Loading...</div>;
+  // }
 
   {
     /*const handleLanguageChange = (event) => {
@@ -73,6 +84,24 @@ const ProblemPage = () => {
     }
   };*/
   }
+
+  useEffect(() => {
+    const fetchSubmissions = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5001/getsubmissions",
+          {
+            params: { userId: userId, problemId: id },
+          }
+        );
+        setSubmissions(response.data);
+      } catch (error) {
+        console.error("Error fetching submissions:", error);
+      }
+    };
+
+    fetchSubmissions();
+  }, [id, userId]);
 
   const handleRun = async () => {
     const payload = {
@@ -130,7 +159,7 @@ const ProblemPage = () => {
       const { data } = await axios.post("http://localhost:8000/submit", payload);
       setBgColor('white');
       if (data.verdict === "Accepted") {
-        setVerdict("Accepted");
+        setVerdict(data.verdict);
         setOutput("");
         setVerdictBgColor("#00cc00");
         setVerdictColor("#00cc00");
@@ -139,14 +168,14 @@ const ProblemPage = () => {
           Array.from({ length: data.testcases }, (_, i) => `Test case ${i + 1}`)
         );
       } else if (data.verdict === "Wrong Answer") {
-        setVerdict("Wrong Answer");
+        setVerdict(data.verdict);
         setOutput("");
         setVerdictBgColor("#ff0000");
         setVerdictColor("#ff0000");
         setColor("white");
         setDetails([`Test case ${data.testcase}`]);
       } else if (data.verdict === "Time Limit Exceeded") {
-        setVerdict("Time Limit Exceeded");
+        setVerdict(data.verdict);
         setOutput("");
         setVerdictBgColor("#ff0000");
         setVerdictColor("#ff0000");
@@ -159,6 +188,24 @@ const ProblemPage = () => {
         setVerdictColor("#ff0000");
         setDetails([data.stderr]);
       }
+
+      try{
+        await axios.post(
+          "http://localhost:5001/submissions",
+          {
+            userId: userId,
+            code: payload.code,
+            verdict: data.verdict,
+            problemId: payload.id,
+          },
+          { withCredentials: true }
+        );
+      } catch(error){
+        console.log("Verdict:", verdict);
+        console.log(error);
+      }
+
+
     } catch (error) {
       setVerdict("Error");
       setOutput("");
@@ -177,6 +224,11 @@ const ProblemPage = () => {
     setActiveEditorTab("verdict");
     setIsLoading(true);
     const submitWait = await handleSubmit();
+  };
+
+  const handleCodeClick = (code) => {
+    setSelectedCode(code);
+    setShowModal(true);
   };
 
   return (
@@ -245,8 +297,53 @@ const ProblemPage = () => {
             )}
             {activeTab === "submissions" && (
               <div>
-                <h2 className="text-xl font-bold mb-2">My Submissions</h2>
-                {/* Add your submissions component here */}
+                <table className="table-auto w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-black text-white">
+                      <th className="px-4 py-2 border border-gray-300 w-300">
+                        Verdict
+                      </th>
+                      <th className="px-4 py-2 border border-gray-300 w-32">
+                        Code
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {submissions.codes &&
+                      submissions.codes.map((code, index) => (
+                        <tr key={index} className="hover:bg-gray-100">
+                          <td className="px-4 py-2 border border-gray-300">
+                            {submissions.verdicts[index]}
+                          </td>
+                          <td className="px-4 py-2 border border-gray-300 w-32">
+                            <button
+                              className="bg-red-500 text-white px-2 py-2 rounded flex items-center justify-center"
+                              onClick={() => handleCodeClick(code)}
+                            >
+                              <FaCode />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+                {showModal && (
+                  <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded shadow-lg w-3/4 max-w-3xl">
+                      <span
+                        className="close text-black cursor-pointer float-right text-2xl"
+                        onClick={() => setShowModal(false)}
+                      >
+                        &times;
+                      </span>
+                      <textarea
+                        readOnly
+                        value={selectedCode}
+                        className="w-full h-64 p-2 border border-gray-300 rounded mt-4"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
