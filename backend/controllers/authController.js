@@ -77,7 +77,7 @@ exports.registration = async(req, res)=>{
         const options = {
             expires : new Date(Date.now() + 1*24*60*60*1000), 
             httpOnly : false,
-            secure: false,
+            secure: true,
             sameSite: 'None',
             path: '/',
         };
