@@ -1,6 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
-require('dotenv').config({path: "../.env"});
+require('dotenv').config();
 const cors = require('cors');
 var cookieParser = require('cookie-parser')
 
@@ -10,9 +10,11 @@ var cookieParser = require('cookie-parser')
 // Initialize Express
 const app = express();
 
+const allowedOrigins = process.env.FRONTEND_URL || 'http://localhost:3000';
+
 // Middleware
 app.use(cookieParser());
-app.use(cors({origin: 'http://localhost:3000',
+app.use(cors({origin: allowedOrigins,
 credentials: true}));
 app.use(express.json());
 app.use(express.urlencoded({extended : true}));
