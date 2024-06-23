@@ -25,7 +25,7 @@ const UserDashboard = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5001/problems")
+      .get(`${process.env.REACT_APP_BACKEND_URL}/problems`)
       .then((response) => {
         setProblems(response.data);
         console.log(problems);

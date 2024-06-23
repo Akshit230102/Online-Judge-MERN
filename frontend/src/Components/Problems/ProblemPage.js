@@ -58,7 +58,7 @@ const ProblemPage = () => {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:5001/details/${id}`)
+      .get(`${process.env.REACT_APP_BACKEND_URL}/details/${id}`)
       .then((response) => {
         setProblem(response.data);
       })
@@ -89,7 +89,7 @@ const ProblemPage = () => {
     const fetchSubmissions = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5001/getsubmissions",
+          `${process.env.REACT_APP_BACKEND_URL}/getsubmissions`,
           {
             params: { userId: userId, problemId: id },
           }
@@ -191,7 +191,7 @@ const ProblemPage = () => {
 
       try{
         await axios.post(
-          "http://localhost:5001/submissions",
+          `${process.env.REACT_APP_BACKEND_URL}/submissions`,
           {
             userId: userId,
             code: payload.code,

@@ -18,7 +18,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = "http://localhost:5001/login";
+      const url = `${process.env.REACT_APP_BACKEND_URL}/login`;
       await axios.post(url, data, { withCredentials: true });
 
       const role = getUserRoleFromToken(); // Get user role from token

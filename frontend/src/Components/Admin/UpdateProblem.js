@@ -14,7 +14,7 @@ const UpdateProblem = () => {
 
   useEffect(() => {
     setLoading(true);
-    axios.get(`http://localhost:5001/details/${id}`)
+    axios.get(`${process.env.REACT_APP_BACKEND_URL}/details/${id}`)
     .then((response) => {
         setSolved(response.data.solved);
         setDescription(response.data.description);
@@ -39,7 +39,7 @@ const UpdateProblem = () => {
     };
     setLoading(true);
     axios
-      .put(`http://localhost:5001/update/${id}`, data)
+      .put(`${process.env.REACT_APP_BACKEND_URL}/update/${id}`, data)
       .then(() => {
         setLoading(false);
         navigate('/adminDashboard');

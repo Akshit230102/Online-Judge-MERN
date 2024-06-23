@@ -52,7 +52,7 @@ app.post("/run", async (req, res) => {
     }
   
     try {
-      const testcasesResponse = await axios.get(`${process.env.HOST_IP}/testcases/${id}`);
+      const testcasesResponse = await axios.get(`${process.env.BACKEND_URL}/testcases/${id}`);
       const testcases = testcasesResponse.data;
   
       if (!testcases) {

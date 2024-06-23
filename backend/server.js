@@ -39,9 +39,6 @@ const testCaseRouter = require('./routes/testcaseRoutes');
 const submissionRouter = require('./routes/submissionRoutes');
 
 
-app.use("/",(req,res)=>{
-  res.send("Server is running");
-});
 
 //app.use('/api/example', exampleRouter);
 app.use('/',authRouter);

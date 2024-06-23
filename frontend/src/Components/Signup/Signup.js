@@ -25,7 +25,7 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = "http://localhost:5001/register";
+      const url = `${process.env.REACT_APP_BACKEND_URL}/register`;
       const { data: res } = await axios.post(url, data);
       navigate("/login");
       console.log(res.message);

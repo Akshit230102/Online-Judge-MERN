@@ -11,7 +11,7 @@ const AddTestcase = () => {
   useEffect(() => {
     const fetchTestcases = async () => {
       try {
-        const response = await axios.get(`http://localhost:5001/testcases/${problemId}`);
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/testcases/${problemId}`);
         if (response.data) {
           setTestcases(response.data.inputs.map((input, index) => ({ input, output: response.data.outputs[index] })));
           setIsUpdating(true);
@@ -45,9 +45,9 @@ const AddTestcase = () => {
 
     try {
       if (isUpdating) {
-        await axios.put(`http://localhost:5001/testcases/${problemId}`, { inputs, outputs });
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/testcases/${problemId}`, { inputs, outputs });
       } else {
-        await axios.post('http://localhost:5001/testcases', { problemId, inputs, outputs });
+        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/testcases`, { problemId, inputs, outputs });
       }
       navigate('/adminDashboard');
     } catch (error) {

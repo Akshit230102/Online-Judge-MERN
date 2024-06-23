@@ -22,7 +22,7 @@ const CreateProblem = () => {
     };
     setLoading(true);
     axios
-      .post('http://localhost:5001/problems/create', data)
+      .post(`${process.env.REACT_APP_BACKEND_URL}/create`, data)
       .then(() => {
         setLoading(false);
         navigate('/adminDashboard');

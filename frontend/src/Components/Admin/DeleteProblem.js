@@ -10,7 +10,7 @@ const DeleteProblem= () => {
   const handleDeleteBook = () => {
     setLoading(true);
     axios
-      .delete(`http://localhost:5001/delete/${id}`)
+      .delete(`${process.env.REACT_APP_BACKEND_URL}/delete/${id}`)
       .then(() => {
         setLoading(false);
         navigate('/adminDashboard');
